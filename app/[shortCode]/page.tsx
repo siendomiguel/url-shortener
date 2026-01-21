@@ -22,6 +22,8 @@ export default async function ShortUrlPage({ params }: PageProps) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <h1 className="text-2xl">404 - Short URL not found</h1>
+        <p>Short code: {shortCode}</p>
+        {error && <p>Error: {error.message}</p>}
       </div>
     );
   }
