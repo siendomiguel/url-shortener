@@ -151,6 +151,8 @@ export default function AnalyticsPage() {
   const totalClicks = clicks.length;
   const maxValue = Math.max(...chartData.map(d => d.value), 5000);
 
+  const origin = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
       <div className="max-w-5xl mx-auto space-y-6">
