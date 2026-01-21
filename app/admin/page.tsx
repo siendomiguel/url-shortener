@@ -1,13 +1,24 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { CopyButton } from '@/components/copy-button';
+import { DeleteButton } from '@/components/delete-button';
 import { headers } from 'next/headers';
+
+function truncateUrl(url: string, shortCode: string): string {
+  const full = `${url}/${shortCode}`;
+  if (full.length <= 50) return full;
+  const domain = url;
+  if (domain.length <= 20) return full;
+  const start = domain.slice(0, 15);
+  const end = domain.slice(-10);
+  return `${start}...${end}/${shortCode}`;
+}
 
 export default async function AdminPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const headersList = await headers();
-  const origin = headersList.get('origin') || 'http://localhost:3000';
+  const origin = process.env.NEXT_PUBLIC_BASE_URL || headersList.get('origin') || 'http://localhost:3000';
 
   if (!user) {
     return <div>Access denied</div>;
@@ -67,7 +78,7 @@ export default async function AdminPage() {
                   <tr key={url.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400 flex items-center">
                       <Link href={`/${url.short_code}`} target="_blank" className="hover:underline">
-                        {`${origin}/${url.short_code}`}
+                        {truncateUrl(origin, url.short_code)}
                       </Link>
                       <CopyButton text={`${origin}/${url.short_code}`} />
                     </td>
@@ -84,9 +95,7 @@ export default async function AdminPage() {
                       <button className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
                         <Link href={`/admin/${url.short_code}`}>Analytics</Link>
                       </button>
-                      <button className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-                        Delete
-                      </button>
+                      <DeleteButton urlId={url.id} />
                     </td>
                   </tr>
                 ))}
