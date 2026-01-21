@@ -1,23 +1,44 @@
-import Link from "next/link";
-import { Button } from "./ui/button";
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Button } from './ui/button';
+import { createClient } from '@/lib/supabase/client';
+import { User } from '@supabase/supabase-js';
 
 export function DeployButton() {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, []);
+
+  if (!user) return null;
+
   return (
     <>
-      <Link
-        href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png"
-        target="_blank"
-      >
+      <Link href="/admin">
         <Button className="flex items-center gap-2" size="sm">
-          <svg
-            className="h-3 w-3"
-            viewBox="0 0 76 65"
-            fill="hsl(var(--background)/1)"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" fill="inherit" />
+          <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="#000000">
+            <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+            <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
+            <g id="SVGRepo_iconCarrier">
+              {' '}
+              <rect x="0" fill="none" width="20" height="20"></rect>{' '}
+              <g>
+                {' '}
+                <path d="M10 9.25c-2.27 0-2.73-3.44-2.73-3.44C7 4.02 7.82 2 9.97 2c2.16 0 2.98 2.02 2.71 3.81 0 0-.41 3.44-2.68 3.44zm0 2.57L12.72 10c2.39 0 4.52 2.33 4.52 4.53v2.49s-3.65 1.13-7.24 1.13c-3.65 0-7.24-1.13-7.24-1.13v-2.49c0-2.25 1.94-4.48 4.47-4.48z"></path>{' '}
+              </g>{' '}
+            </g>
           </svg>
-          <span>Deploy to Vercel</span>
+          <span>Admin</span>
         </Button>
       </Link>
     </>

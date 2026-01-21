@@ -63,6 +63,10 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    background: linear-gradient(to bottom, rgba(248, 250, 252, 0.5), rgb(255, 255, 255));
+    @apply text-foreground;
+  }
+  .dark body {
+    background: linear-gradient(to bottom, rgb(17, 24, 39), rgb(31, 41, 55));
   }
 }
