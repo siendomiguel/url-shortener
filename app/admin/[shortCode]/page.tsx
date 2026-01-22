@@ -55,26 +55,10 @@ export default function AnalyticsPage() {
       const clickData = clicks || [];
       setClicks(clickData);
 
-      // Process countries
-      const uniqueIPs = [...new Set(clickData.map(c => c.ip_address.split('/')[0]).filter(ip => ip !== 'unknown' && ip !== '::1'))];
-
-      const ipCountries = await Promise.all(
-        uniqueIPs.slice(0, 10).map(async (ip) => {
-          if (ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.')) {
-            return { ip, country: 'Local' };
-          }
-          try {
-            const res = await fetch(`https://ip.guide/${ip}`);
-            const data = await res.json();
-            return { ip, country: data.country || 'Unknown' };
-          } catch {
-            return { ip, country: 'Unknown' };
-          }
-        })
-      );
-
-      const countryCounts = ipCountries.reduce((acc: Record<string, number>, item) => {
-        acc[item.country] = (acc[item.country] || 0) + clickData.filter(c => c.ip_address.startsWith(item.ip)).length;
+      // Process countries from stored data
+      const countryCounts = clickData.reduce((acc: Record<string, number>, click) => {
+        const country = click.country || 'Unknown';
+        acc[country] = (acc[country] || 0) + 1;
         return acc;
       }, {});
 

@@ -33,11 +33,18 @@ export default async function ShortUrlPage({ params }: PageProps) {
   const userAgent = headersList.get('user-agent') || '';
   const referrer = headersList.get('referer') || '';
 
+  // Get country
+  const country = ip !== 'unknown' ? await fetch(`https://ip.guide/${ip}`)
+    .then(r => r.json())
+    .then(d => d.country || 'Unknown')
+    .catch(() => 'Unknown') : 'Unknown';
+
   await supabase.from('clicks').insert({
     url_id: urlData.id,
     ip_address: ip,
     user_agent: userAgent,
     referrer: referrer,
+    country: country,
   });
 
   // Redirect to original URL
