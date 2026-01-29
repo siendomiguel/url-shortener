@@ -43,9 +43,6 @@ export default async function ShortUrlPage({ params }: PageProps) {
     user_agent: userAgent,
     referrer: referrer,
     country: location.country,
-    country_code: location.countryCode,
-    city: location.city,
-    isp: location.isp,
   });
 
   // Redirect to original URL

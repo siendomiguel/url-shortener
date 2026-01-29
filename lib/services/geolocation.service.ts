@@ -38,12 +38,18 @@ export class GeolocationService {
         }
 
         try {
+            console.log(`Geolocating IP: ${ip}`);
             const response = await fetch(`${this.API_URL}/${ip}`);
-            if (!response.ok) return unknownLocation;
+            if (!response.ok) {
+                console.error(`Geolocation API responded with status: ${response.status}`);
+                return unknownLocation;
+            }
 
             const data: GeolocationData = await response.json();
+            console.log('Geolocation API response data:', data);
 
             if (data.status === 'fail') {
+                console.warn(`Geolocation failed for IP ${ip}: ${data.message}`);
                 return unknownLocation;
             }
 

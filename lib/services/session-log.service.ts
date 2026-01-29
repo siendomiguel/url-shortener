@@ -24,13 +24,8 @@ export class SessionLogService {
             ip,
             user_agent: userAgent,
             country: location.country,
-            country_code: location.countryCode,
             city: location.city,
-            region: location.region,
             isp: location.isp,
-            lat: location.lat,
-            lon: location.lon,
-            timezone: location.timezone,
         });
 
         if (error) {
