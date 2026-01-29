@@ -48,7 +48,7 @@ export default async function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-[95%] mx-auto">
         <h1 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">My Shortened URLs</h1>
 
         {urlsWithCounts && urlsWithCounts.length > 0 ? (

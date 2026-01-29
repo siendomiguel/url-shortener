@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
+import { GeolocationService } from '@/lib/services/geolocation.service';
 
 interface PageProps {
   params: Promise<{ shortCode: string }>;
@@ -29,22 +30,22 @@ export default async function ShortUrlPage({ params }: PageProps) {
   }
 
   // Log the click
-  const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown';
+  const ip = headersList.get('x-forwarded-for')?.split(',')[0] || headersList.get('x-real-ip') || 'unknown';
   const userAgent = headersList.get('user-agent') || '';
   const referrer = headersList.get('referer') || '';
 
-  // Get country
-  const country = ip !== 'unknown' ? await fetch(`https://ip.guide/${ip}`)
-    .then(r => r.json())
-    .then(d => d.country || 'Unknown')
-    .catch(() => 'Unknown') : 'Unknown';
+  // Get country using new GeolocationService
+  const location = await GeolocationService.getGeolocation(ip);
 
   await supabase.from('clicks').insert({
     url_id: urlData.id,
     ip_address: ip,
     user_agent: userAgent,
     referrer: referrer,
-    country: country,
+    country: location.country,
+    country_code: location.countryCode,
+    city: location.city,
+    isp: location.isp,
   });
 
   // Redirect to original URL
