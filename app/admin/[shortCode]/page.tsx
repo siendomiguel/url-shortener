@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client';
 import { CopyButton } from '@/components/copy-button';
-import { Copy, BarChart3, Share2, Trash2, Link2, Edit2, Check, X } from 'lucide-react';
+import { Copy, BarChart3, Share2, Trash2, Link2, Edit2, Check, X, LineChart as LineChartIcon, Activity, ChevronLeft, ChevronRight, Globe, Monitor, Smartphone, Bot as BotIcon } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
@@ -18,6 +18,9 @@ export default function AnalyticsPage() {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d' | 'all'>('all');
+  const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [topReferrers, setTopReferrers] = useState<{ name: string; count: number }[]>([]);
 
   useEffect(() => {
@@ -281,7 +284,25 @@ export default function AnalyticsPage() {
           {/* Main Chart */}
           <Card className="lg:col-span-2 p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-sm rounded-3xl lg:order-1 order-2">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Visitor Stats</h3>
+              <div className="flex items-center gap-4">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Visitor Stats</h3>
+                <div className="flex p-0.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                  <button
+                    onClick={() => setChartType('bar')}
+                    className={`p-1.5 rounded-md transition-all ${chartType === 'bar' ? 'bg-white dark:bg-gray-700 text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                    title="Bar Chart"
+                  >
+                    <BarChart3 size={16} />
+                  </button>
+                  <button
+                    onClick={() => setChartType('line')}
+                    className={`p-1.5 rounded-md transition-all ${chartType === 'line' ? 'bg-white dark:bg-gray-700 text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                    title="Line Chart"
+                  >
+                    <LineChartIcon size={16} />
+                  </button>
+                </div>
+              </div>
               <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
                 {(['24h', '7d', '30d', 'all'] as const).map((range) => (
                   <button
@@ -313,22 +334,70 @@ export default function AnalyticsPage() {
                 ))}
               </div>
 
-              {/* Bars Container */}
-              <div className="absolute ml-8 bottom-8 left-0 right-0 h-[calc(100%-32px)] flex items-end justify-around px-2">
-                {chartData.map((item, index) => (
-                  <div key={index} className="flex-1 flex flex-col items-center group relative h-full justify-end">
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                      {item.value} clicks
-                    </div>
-                    <div
-                      className="w-full max-w-[40px] bg-blue-500 dark:bg-blue-600 rounded-t-sm group-hover:bg-blue-400 transition-all"
-                      style={{ height: `${(item.value / maxVal) * 100}%`, minHeight: item.value > 0 ? '4px' : '0' }}
-                    />
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2">
-                      <span className="text-[10px] text-gray-400 dark:text-gray-500 whitespace-nowrap rotate-45 origin-left">{item.label}</span>
+              {/* Charts Container */}
+              <div className="absolute ml-8 bottom-8 left-0 right-0 h-[calc(100%-32px)] px-2">
+                {chartType === 'bar' ? (
+                  <div className="flex items-end justify-around h-full">
+                    {chartData.map((item, index) => (
+                      <div key={index} className="flex-1 flex flex-col items-center group relative h-full justify-end">
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                          {item.value} clicks
+                        </div>
+                        <div
+                          className="w-full max-w-[40px] bg-blue-500 dark:bg-blue-600 rounded-t-sm group-hover:bg-blue-400 transition-all"
+                          style={{ height: `${(item.value / maxVal) * 100}%`, minHeight: item.value > 0 ? '4px' : '0' }}
+                        />
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2">
+                          <span className="text-[10px] text-gray-400 dark:text-gray-500 whitespace-nowrap rotate-45 origin-left">{item.label}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-full relative font-mono">
+                    <svg className="w-full h-full" preserveAspectRatio="none" viewBox={`0 0 ${chartData.length - 1} ${maxVal}`}>
+                      <defs>
+                        <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+                          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                      {/* Gradient Fill */}
+                      <path
+                        d={`M 0 ${maxVal} ${chartData.map((d, i) => `L ${i} ${maxVal - d.value}`).join(' ')} L ${chartData.length - 1} ${maxVal} Z`}
+                        fill="url(#chartGradient)"
+                        className="transition-all duration-500"
+                      />
+                      {/* Main Line */}
+                      <path
+                        d={`M 0 ${maxVal - chartData[0].value} ${chartData.map((d, i) => `L ${i} ${maxVal - d.value}`).join(' ')}`}
+                        fill="none"
+                        stroke="#3b82f6"
+                        strokeWidth={maxVal * 0.02}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="transition-all duration-500"
+                      />
+                    </svg>
+                    {/* Dots and Labels for Line Chart */}
+                    <div className="absolute inset-0 flex justify-between">
+                      {chartData.map((item, index) => (
+                        <div key={index} className="flex-1 flex flex-col items-center group relative h-full">
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                            {item.value} clicks
+                          </div>
+                          <div
+                            className="absolute w-2 h-2 rounded-full bg-blue-500 border-2 border-white dark:border-gray-900 group-hover:scale-150 transition-transform"
+                            style={{ bottom: `${(item.value / maxVal) * 100}%`, transform: 'translateY(50%)' }}
+                          />
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2">
+                            <span className="text-[10px] text-gray-400 dark:text-gray-500 whitespace-nowrap rotate-45 origin-left">{item.label}</span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             </div>
             <div className="h-8" /> {/* Spacer for rotated labels */}
@@ -380,6 +449,133 @@ export default function AnalyticsPage() {
             </Card>
           </div>
         </div>
+
+        {/* Detailed Logs Table */}
+        <Card className="p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-sm rounded-3xl overflow-hidden">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Detailed Logs</h3>
+              <p className="text-sm text-gray-500 mt-1">All recorded click events with full metadata</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500">Show:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+              >
+                {[10, 20, 50, 100].map(n => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto -mx-6">
+            <table className="w-full text-left border-collapse min-w-[1000px]">
+              <thead>
+                <tr className="border-y border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50">
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date & Time</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">IP Address</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Location</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Device / OS</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Browser / Lang</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Referrer</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Network (ISP)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 text-sm">
+                {clicks.length > 0 ? (
+                  clicks
+                    .slice()
+                    .reverse() // Newest first for the table
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((click, i) => (
+                      <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                          {new Date(click.clicked_at).toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap font-mono text-xs text-gray-600 dark:text-gray-400">
+                          {click.ip_address}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-col">
+                            <span className="font-medium text-gray-900 dark:text-white">{click.city || 'Unknown'}</span>
+                            <span className="text-xs text-gray-500">{click.country || 'Unknown'} ({click.timezone})</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            {click.device_type === 'Mobile' ? <Smartphone size={14} className="text-blue-500" /> :
+                              click.device_type === 'Bot' ? <BotIcon size={14} className="text-red-500" /> :
+                                <Monitor size={14} className="text-green-500" />}
+                            <span className="text-gray-900 dark:text-white">{click.os || 'Unknown'}</span>
+                            <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-gray-500">{click.device_type}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-col">
+                            <span className="text-gray-900 dark:text-white">{click.browser || 'Unknown'}</span>
+                            <span className="text-xs text-gray-500">{click.language || 'Unknown'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 max-w-[200px] truncate text-blue-600 dark:text-blue-400">
+                          {click.referrer || 'Direct'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500 truncate max-w-[150px]">
+                          {click.isp || 'Unknown'}
+                        </td>
+                      </tr>
+                    ))) : (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">No logs available yet</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination Controls */}
+          {clicks.length > itemsPerPage && (
+            <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+              <span className="text-sm text-gray-500">
+                Showing <span className="font-medium text-gray-900 dark:text-white">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium text-gray-900 dark:text-white">{Math.min(currentPage * itemsPerPage, clicks.length)}</span> of <span className="font-medium text-gray-900 dark:text-white">{clicks.length}</span> results
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-gray-600 dark:text-gray-300"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <div className="flex items-center gap-1">
+                  {[...Array(Math.ceil(clicks.length / itemsPerPage))].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${currentPage === i + 1
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                    >
+                      {i + 1}
+                    </button>
+                  )).slice(Math.max(0, currentPage - 3), Math.min(Math.ceil(clicks.length / itemsPerPage), currentPage + 2))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(Math.ceil(clicks.length / itemsPerPage), p + 1))}
+                  disabled={currentPage === Math.ceil(clicks.length / itemsPerPage)}
+                  className="p-2 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-gray-600 dark:text-gray-300"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+          )}
+        </Card>
       </div>
     </div>
   );

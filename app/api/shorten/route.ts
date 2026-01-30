@@ -7,20 +7,20 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'No autorizado. Por favor, inicia sesión.' }, { status: 401 });
   }
 
   const { original_url } = await request.json();
 
   if (!original_url || typeof original_url !== 'string') {
-    return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
+    return NextResponse.json({ error: 'URL no válida.' }, { status: 400 });
   }
 
   // Validate URL
   try {
     new URL(original_url);
   } catch {
-    return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 });
+    return NextResponse.json({ error: 'Formato de URL no válido.' }, { status: 400 });
   }
 
   // Generate unique short code
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!isUnique) {
-    return NextResponse.json({ error: 'Failed to generate unique code' }, { status: 500 });
+    return NextResponse.json({ error: 'No se pudo generar un código único. Intentalo de nuevo.' }, { status: 500 });
   }
 
   // Insert into database
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    return NextResponse.json({ error: 'Error en la base de datos.' }, { status: 500 });
   }
 
   // Return the short URL

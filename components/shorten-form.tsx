@@ -27,6 +27,13 @@ export function ShortenForm() {
 
   const handleShorten = async () => {
     if (!url.trim()) return;
+
+    // Prevent action if not logged in
+    if (!user) {
+      setError('Debes iniciar sesión o registrarte para acortar enlaces.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
@@ -38,11 +45,12 @@ export function ShortenForm() {
       const data = await response.json();
       if (response.ok) {
         setShortUrl(data.short_url);
+        setUrl(''); // Clear input on success
       } else {
-        setError(data.error || 'Error shortening URL');
+        setError(data.error || 'Ocurrió un error al acortar la URL.');
       }
     } catch (err) {
-      setError('Network error');
+      setError('Error de conexión. Por favor, revisa tu internet.');
     }
     setLoading(false);
   };
@@ -52,17 +60,16 @@ export function ShortenForm() {
       <div className="w-full max-w-2xl mx-auto text-center">
         {/* Header with pointing hands */}
         <div className="flex items-center justify-center gap-4 mb-2">
-          <span className="text-4xl transform -scale-x-100">👆</span>
+          <span className="text-4xl transform -scale-x-100">👉</span>
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-400 dark:to-blue-500 bg-clip-text text-transparent">
-            Create Short Link
+            Crea un Link Corto
           </h1>
-          <span className="text-4xl">👆</span>
+          <span className="text-4xl">👈</span>
         </div>
 
         {/* Subtitle */}
         <p className="text-gray-500 dark:text-gray-400 text-sm mb-8 max-w-md mx-auto">
-          URL Shortener is a custom short link personalization tool that enables you to target, engage and drive more
-          customers. Get started for free.
+          URL Shortener es una herramienta personalizada que te permite gestionar, medir e impulsar tus enlaces. ¡Empieza gratis registrándote hoy!
         </p>
 
         {/* Input and Button */}
@@ -71,7 +78,7 @@ export function ShortenForm() {
             <Link className="w-5 h-5 text-blue-500" />
             <Input
               type="url"
-              placeholder="Paste a link to shorten it!"
+              placeholder="¡Pega un enlace para acortarlo!"
               value={url}
               onChange={e => setUrl(e.target.value)}
               className="border-0 shadow-none focus-visible:ring-0 text-gray-600 dark:text-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-500 bg-transparent"
@@ -81,14 +88,14 @@ export function ShortenForm() {
             onClick={handleShorten}
             disabled={loading}
             className="rounded-full bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-6 py-2 h-10">
-            {loading ? 'Shortening...' : 'Shorten'}
+            {loading ? 'Acortando...' : 'Acortar'}
           </Button>
         </div>
 
         {shortUrl && (
-          <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-            <p className="text-green-800 dark:text-green-200 font-semibold">Success!</p>
-            <p className="text-green-700 dark:text-green-300 break-all">{shortUrl}</p>
+          <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 text-center">
+            <p className="text-green-800 dark:text-green-200 font-semibold text-lg">¡Enlace acortado con éxito!</p>
+            <p className="text-blue-600 dark:text-blue-400 font-mono mt-2 break-all text-xl">{shortUrl}</p>
           </div>
         )}
 
@@ -100,9 +107,11 @@ export function ShortenForm() {
 
         {/* See Analytics Link */}
         {!user && (
-          <button className="text-gray-700 dark:text-gray-300 font-semibold text-sm hover:text-blue-500 dark:hover:text-blue-400 transition-colors mb-8">
-            Register or Login to see Analytics
-          </button>
+          <div className="flex flex-col items-center gap-2 mb-8">
+            <p className="text-amber-600 dark:text-amber-500 font-semibold text-sm">
+              ⚠️ Registrate o inicia sesión para crear enlaces y ver estadísticas
+            </p>
+          </div>
         )}
 
         {/* Divider */}
@@ -110,7 +119,7 @@ export function ShortenForm() {
 
         {/* Features */}
         <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
-          Use it, its Free..Fast - Secure - Long Term Link
+          Úsalo, es Gratis...Rápido - Seguro - Enlaces Duraderos
         </p>
 
         {/* Link Icon */}

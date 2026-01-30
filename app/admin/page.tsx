@@ -1,3 +1,4 @@
+import { Copy, BarChart3, Share2, Trash2, Link2, Edit2, Check, X, LineChart as LineChartIcon, Activity } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { CopyButton } from '@/components/copy-button';
@@ -24,6 +25,15 @@ export default async function AdminPage() {
     return <div>Access denied</div>;
   }
 
+  // Fetch user role
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  const isAdmin = userData?.role === 'admin';
+
   // Fetch URLs
   const { data: urls, error } = await supabase
     .from('urls')
@@ -49,7 +59,19 @@ export default async function AdminPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
       <div className="max-w-[95%] mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">My Shortened URLs</h1>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Mis Links Acortados</h1>
+
+          {isAdmin && (
+            <Link
+              href="/admin/all"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-semibold transition-colors shadow-sm"
+            >
+              <Activity size={18} />
+              Panel de Control Global
+            </Link>
+          )}
+        </div>
 
         {urlsWithCounts && urlsWithCounts.length > 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
@@ -57,19 +79,19 @@ export default async function AdminPage() {
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Short URL
+                    Link Corto
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Original URL
+                    Link Original
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Clicks
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Created
+                    Creado
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Actions
+                    Acciones
                   </th>
                 </tr>
               </thead>

@@ -14,7 +14,7 @@ export function DeleteButton({ urlId }: DeleteButtonProps) {
   const router = useRouter();
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this URL?')) return;
+    if (!confirm('¿Estás seguro de que quieres eliminar este enlace?')) return;
 
     setLoading(true);
     try {
@@ -23,7 +23,7 @@ export function DeleteButton({ urlId }: DeleteButtonProps) {
       if (error) throw error;
       router.refresh(); // Refresh the page
     } catch (err) {
-      alert('Error deleting URL');
+      alert('Error al eliminar el enlace');
     }
     setLoading(false);
   };
@@ -33,7 +33,7 @@ export function DeleteButton({ urlId }: DeleteButtonProps) {
       onClick={handleDelete}
       disabled={loading}
       className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
-      title="Delete URL"
+      title="Eliminar enlace"
     >
       {loading ? '...' : <Trash2 size={16} />}
     </button>
