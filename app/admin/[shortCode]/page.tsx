@@ -22,6 +22,8 @@ export default function AnalyticsPage() {
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [topReferrers, setTopReferrers] = useState<{ name: string; count: number }[]>([]);
+  const [osFilter, setOsFilter] = useState<string[]>([]);
+  const [browserFilter, setBrowserFilter] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -193,6 +195,17 @@ export default function AnalyticsPage() {
   };
 
   const chartData = getFilteredData();
+
+  // Calculate unique OS and Browser values for filters
+  const availableOS = Array.from(new Set(clicks.map(c => c.os || 'Unknown'))).sort();
+  const availableBrowsers = Array.from(new Set(clicks.map(c => c.browser || 'Unknown'))).sort();
+
+  const filteredClicks = clicks.filter(click => {
+    const osMatch = osFilter.length === 0 || osFilter.includes(click.os || 'Unknown');
+    const browserMatch = browserFilter.length === 0 || browserFilter.includes(click.browser || 'Unknown');
+    return osMatch && browserMatch;
+  });
+
   const rangeTotalClicks = chartData.reduce((a, b) => a + b.value, 0);
   const maxVal = Math.max(...chartData.map(d => d.value), 10);
   const yAxisTicks = [maxVal, Math.round(maxVal * 0.75), Math.round(maxVal * 0.5), Math.round(maxVal * 0.25), 0];
@@ -457,6 +470,70 @@ export default function AnalyticsPage() {
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Detailed Logs</h3>
               <p className="text-sm text-gray-500 mt-1">All recorded click events with full metadata</p>
             </div>
+            <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex flex-col gap-1.5 min-w-[200px]">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">OS Filter</span>
+                <div className="flex flex-wrap gap-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-800">
+                  {availableOS.map(os => (
+                    <button
+                      key={os}
+                      onClick={() => {
+                        setOsFilter(prev =>
+                          prev.includes(os) ? prev.filter(item => item !== os) : [...prev, os]
+                        );
+                        setCurrentPage(1);
+                      }}
+                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${osFilter.includes(os)
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-100 dark:border-gray-700'
+                        }`}
+                    >
+                      {os}
+                    </button>
+                  ))}
+                  {availableOS.length === 0 && <span className="text-xs text-gray-400 p-1">No OS data</span>}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5 min-w-[200px]">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Browser Filter</span>
+                <div className="flex flex-wrap gap-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-800">
+                  {availableBrowsers.map(browser => (
+                    <button
+                      key={browser}
+                      onClick={() => {
+                        setBrowserFilter(prev =>
+                          prev.includes(browser) ? prev.filter(item => item !== browser) : [...prev, browser]
+                        );
+                        setCurrentPage(1);
+                      }}
+                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${browserFilter.includes(browser)
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-100 dark:border-gray-700'
+                        }`}
+                    >
+                      {browser}
+                    </button>
+                  ))}
+                  {availableBrowsers.length === 0 && <span className="text-xs text-gray-400 p-1">No browser data</span>}
+                </div>
+              </div>
+
+              {(osFilter.length > 0 || browserFilter.length > 0) && (
+                <button
+                  onClick={() => {
+                    setOsFilter([]);
+                    setBrowserFilter([]);
+                    setCurrentPage(1);
+                  }}
+                  className="mt-6 px-4 py-1.5 text-xs font-bold text-red-500 hover:text-red-600 dark:hover:text-red-400 transition-colors flex items-center gap-1"
+                >
+                  <X size={14} />
+                  Clear Filters
+                </button>
+              )}
+            </div>
+
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-500">Show:</span>
               <select
@@ -488,8 +565,8 @@ export default function AnalyticsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800 text-sm">
-                {clicks.length > 0 ? (
-                  clicks
+                {filteredClicks.length > 0 ? (
+                  filteredClicks
                     .slice()
                     .reverse() // Newest first for the table
                     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
@@ -539,10 +616,10 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Pagination Controls */}
-          {clicks.length > itemsPerPage && (
+          {filteredClicks.length > itemsPerPage && (
             <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
               <span className="text-sm text-gray-500">
-                Showing <span className="font-medium text-gray-900 dark:text-white">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium text-gray-900 dark:text-white">{Math.min(currentPage * itemsPerPage, clicks.length)}</span> of <span className="font-medium text-gray-900 dark:text-white">{clicks.length}</span> results
+                Showing <span className="font-medium text-gray-900 dark:text-white">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium text-gray-900 dark:text-white">{Math.min(currentPage * itemsPerPage, filteredClicks.length)}</span> of <span className="font-medium text-gray-900 dark:text-white">{filteredClicks.length}</span> results
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -553,7 +630,7 @@ export default function AnalyticsPage() {
                   <ChevronLeft size={18} />
                 </button>
                 <div className="flex items-center gap-1">
-                  {[...Array(Math.ceil(clicks.length / itemsPerPage))].map((_, i) => (
+                  {[...Array(Math.ceil(filteredClicks.length / itemsPerPage))].map((_, i) => (
                     <button
                       key={i}
                       onClick={() => setCurrentPage(i + 1)}
@@ -563,11 +640,11 @@ export default function AnalyticsPage() {
                     >
                       {i + 1}
                     </button>
-                  )).slice(Math.max(0, currentPage - 3), Math.min(Math.ceil(clicks.length / itemsPerPage), currentPage + 2))}
+                  )).slice(Math.max(0, currentPage - 3), Math.min(Math.ceil(filteredClicks.length / itemsPerPage), currentPage + 2))}
                 </div>
                 <button
-                  onClick={() => setCurrentPage(p => Math.min(Math.ceil(clicks.length / itemsPerPage), p + 1))}
-                  disabled={currentPage === Math.ceil(clicks.length / itemsPerPage)}
+                  onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredClicks.length / itemsPerPage), p + 1))}
+                  disabled={currentPage === Math.ceil(filteredClicks.length / itemsPerPage)}
                   className="p-2 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-gray-600 dark:text-gray-300"
                 >
                   <ChevronRight size={18} />
