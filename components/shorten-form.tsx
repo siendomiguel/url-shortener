@@ -73,21 +73,21 @@ export function ShortenForm() {
         </p>
 
         {/* Input and Button */}
-        <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 p-2 mb-4">
-          <div className="flex items-center gap-2 flex-1 px-4">
-            <Link className="w-5 h-5 text-blue-500" />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-white dark:bg-gray-800 rounded-3xl sm:rounded-full shadow-lg border border-gray-100 dark:border-gray-700 p-2 mb-4">
+          <div className="flex items-center gap-2 flex-1 px-4 py-2 sm:py-0">
+            <Link className="w-5 h-5 text-blue-500 shrink-0" />
             <Input
               type="url"
               placeholder="¡Pega un enlace para acortarlo!"
               value={url}
               onChange={e => setUrl(e.target.value)}
-              className="border-0 shadow-none focus-visible:ring-0 text-gray-600 dark:text-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-500 bg-transparent"
+              className="border-0 shadow-none focus-visible:ring-0 text-gray-600 dark:text-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-500 bg-transparent h-auto py-1"
             />
           </div>
           <Button
             onClick={handleShorten}
             disabled={loading}
-            className="rounded-full bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-6 py-2 h-10">
+            className="rounded-2xl sm:rounded-full bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-8 py-4 h-12 sm:h-11 font-bold">
             {loading ? 'Acortando...' : 'Acortar'}
           </Button>
         </div>
@@ -101,7 +101,7 @@ export function ShortenForm() {
 
         {error && (
           <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-            <p className="text-red-800 dark:text-red-200">{error}</p>
+            <p className="text-red-800 dark:text-red-200 whitespace-pre-wrap">{error}</p>
           </div>
         )}
 

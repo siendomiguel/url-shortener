@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next"
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -9,10 +10,10 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "URL Shortener | Miguel Lares",
+  title: "URLShot | Miguel Lares",
   description: "La forma más rápida de acortar tus enlaces y gestionar tus estadísticas.",
   icons: {
-    icon: "/logo.ico",
+    icon: "/url_short_logo.ico",
   },
 };
 
@@ -30,6 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.className} antialiased`}>
+        <Analytics />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

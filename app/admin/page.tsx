@@ -57,72 +57,81 @@ export default async function AdminPage() {
   ) : [];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
-      <div className="max-w-[95%] mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Mis Links Acortados</h1>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
+      <div className="max-w-[98%] md:max-w-[95%] mx-auto">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 mt-4">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Mis Links Acortados</h1>
 
           {isAdmin && (
             <Link
               href="/admin/all"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-semibold transition-colors shadow-sm"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold transition-all shadow-md active:scale-95"
             >
               <Activity size={18} />
-              Panel de Control Global
+              Panel Global
             </Link>
           )}
         </div>
 
         {urlsWithCounts && urlsWithCounts.length > 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Link Corto
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Link Original
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Clicks
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Creado
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {urlsWithCounts.map((url) => (
-                  <tr key={url.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400 flex items-center">
-                      <Link href={`/${url.short_code}`} target="_blank" className="hover:underline">
-                        {truncateUrl(origin, url.short_code)}
-                      </Link>
-                      <CopyButton text={`${origin}/${url.short_code}`} />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 max-w-xs truncate">
-                      {url.original_url}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {url.clickCount}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {new Date(url.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 space-x-2">
-                      <button className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
-                        <Link href={`/admin/${url.short_code}`}>Analytics</Link>
-                      </button>
-                      <DeleteButton urlId={url.id} />
-                    </td>
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left min-w-[800px]">
+                <thead className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
+                  <tr>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Link Corto
+                    </th>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Link Original
+                    </th>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">
+                      Clicks
+                    </th>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">
+                      Creado
+                    </th>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">
+                      Acciones
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {urlsWithCounts.map((url) => (
+                    <tr key={url.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-600 dark:text-blue-400">
+                        <div className="flex items-center gap-2">
+                          <Link href={`/${url.short_code}`} target="_blank" className="hover:underline">
+                            {url.short_code}
+                          </Link>
+                          <CopyButton text={`${origin}/${url.short_code}`} />
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 max-w-[200px] truncate">
+                        {url.original_url}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-black text-gray-900 dark:text-white">
+                        {url.clickCount}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 dark:text-gray-400 font-medium">
+                        {new Date(url.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold">
+                        <div className="flex items-center justify-end gap-3">
+                          <Link
+                            href={`/admin/${url.short_code}`}
+                            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                          >
+                            <Activity size={18} />
+                          </Link>
+                          <DeleteButton urlId={url.id} />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : (
           <p className="text-gray-500 dark:text-gray-400">No shortened URLs yet.</p>
