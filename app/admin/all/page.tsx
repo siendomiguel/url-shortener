@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { CopyButton } from '@/components/copy-button';
 import { DeleteButton } from '@/components/delete-button';
 import { headers } from 'next/headers';
+import { notFound } from 'next/navigation';
 import { Shield, Users, Link2, MousePointer2, Calendar, LayoutDashboard } from 'lucide-react';
 
 function truncateUrl(url: string, shortCode: string): string {
@@ -19,14 +20,7 @@ export default async function GlobalAdminPage() {
     const origin = process.env.NEXT_PUBLIC_BASE_URL || headersList.get('origin') || 'http://localhost:3000';
 
     if (!user) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl text-center">
-                    <h1 className="text-2xl font-bold text-red-500 mb-2">Acceso Denegado</h1>
-                    <p className="text-gray-600 dark:text-gray-400">Debes iniciar sesión para ver esta página.</p>
-                </div>
-            </div>
-        );
+        notFound();
     }
 
     // Fetch current user's role to verify admin status
@@ -37,18 +31,7 @@ export default async function GlobalAdminPage() {
         .single();
 
     if (userData?.role !== 'admin') {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl text-center border border-amber-200 dark:border-amber-900">
-                    <Shield size={48} className="mx-auto text-amber-500 mb-4" />
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Acceso Restringido</h1>
-                    <p className="text-gray-600 dark:text-gray-400 mb-6">Esta área está reservada exclusivamente para Super Administradores.</p>
-                    <Link href="/admin" className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                        Volver al Panel
-                    </Link>
-                </div>
-            </div>
-        );
+        notFound();
     }
 
     // Fetch ALL URLs from ALL users with their emails
