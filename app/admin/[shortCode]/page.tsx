@@ -47,13 +47,27 @@ export default function AnalyticsPage() {
 
       setUser(user);
 
+      // Fetch user role
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      const isAdmin = userData?.role === 'admin';
+
       // Fetch URL
-      const { data: url, error: urlError } = await supabase
+      let query = supabase
         .from('urls')
         .select('*')
-        .eq('short_code', shortCode)
-        .eq('user_id', user.id)
-        .single();
+        .eq('short_code', shortCode);
+
+      // If not admin, restrict by user_id
+      if (!isAdmin) {
+        query = query.eq('user_id', user.id);
+      }
+
+      const { data: url, error: urlError } = await query.single();
 
       if (urlError || !url) {
         setLoading(false);
@@ -120,8 +134,21 @@ export default function AnalyticsPage() {
   }, [shortCode]);
 
   const handleSaveTitle = async () => {
-    if (!url) return;
+    if (!url || !user) return;
     const supabase = createClient();
+
+    // Check if user is admin or owner
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    const isAdmin = userData?.role === 'admin';
+    const isOwner = url.user_id === user.id;
+
+    if (!isAdmin && !isOwner) return;
+
     await supabase.from('urls').update({ title: newTitle }).eq('id', url.id);
     setUrl({ ...url, title: newTitle });
     setIsEditingTitle(false);
