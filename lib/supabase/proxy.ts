@@ -35,6 +35,9 @@ export async function updateSession(request: NextRequest) {
           );
         },
       },
+      cookieOptions: {
+        name: "m-auth-session",
+      },
     },
   );
 
