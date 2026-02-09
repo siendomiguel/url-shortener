@@ -18,6 +18,144 @@ import {
   Area
 } from 'recharts';
 
+// Helper function to get country flag from FlagsAPI
+function getCountryFlag(country: string | null | undefined): React.ReactElement {
+  if (!country) {
+    return <span className="text-lg">🌍</span>;
+  }
+
+  // Special cases
+  if (country === 'Local') {
+    return <span className="text-lg">🏠</span>;
+  }
+
+  if (country === 'Unknown') {
+    return <span className="text-lg">🌍</span>;
+  }
+
+  // Map country names to ISO 3166-1 alpha-2 codes
+  const countryToISO: Record<string, string> = {
+    // North America
+    'United States': 'US',
+    'Canada': 'CA',
+    'Mexico': 'MX',
+
+    // Central America
+    'Guatemala': 'GT',
+    'Honduras': 'HN',
+    'El Salvador': 'SV',
+    'Nicaragua': 'NI',
+    'Costa Rica': 'CR',
+    'Panama': 'PA',
+    'Belize': 'BZ',
+
+    // South America
+    'Colombia': 'CO',
+    'Venezuela': 'VE',
+    'Ecuador': 'EC',
+    'Peru': 'PE',
+    'Bolivia': 'BO',
+    'Chile': 'CL',
+    'Argentina': 'AR',
+    'Uruguay': 'UY',
+    'Paraguay': 'PY',
+    'Brazil': 'BR',
+    'Guyana': 'GY',
+    'Suriname': 'SR',
+
+    // Caribbean
+    'Cuba': 'CU',
+    'Dominican Republic': 'DO',
+    'Puerto Rico': 'PR',
+    'Jamaica': 'JM',
+    'Haiti': 'HT',
+    'Trinidad and Tobago': 'TT',
+
+    // Europe
+    'United Kingdom': 'GB',
+    'Ireland': 'IE',
+    'France': 'FR',
+    'Germany': 'DE',
+    'Italy': 'IT',
+    'Spain': 'ES',
+    'Portugal': 'PT',
+    'Netherlands': 'NL',
+    'Belgium': 'BE',
+    'Switzerland': 'CH',
+    'Austria': 'AT',
+    'Poland': 'PL',
+    'Russia': 'RU',
+    'Ukraine': 'UA',
+    'Sweden': 'SE',
+    'Norway': 'NO',
+    'Denmark': 'DK',
+    'Finland': 'FI',
+    'Greece': 'GR',
+    'Turkey': 'TR',
+    'Czech Republic': 'CZ',
+    'Romania': 'RO',
+    'Hungary': 'HU',
+    'Slovakia': 'SK',
+    'Bulgaria': 'BG',
+    'Croatia': 'HR',
+    'Serbia': 'RS',
+
+    // Asia
+    'China': 'CN',
+    'Japan': 'JP',
+    'South Korea': 'KR',
+    'India': 'IN',
+    'Pakistan': 'PK',
+    'Bangladesh': 'BD',
+    'Vietnam': 'VN',
+    'Thailand': 'TH',
+    'Philippines': 'PH',
+    'Indonesia': 'ID',
+    'Malaysia': 'MY',
+    'Singapore': 'SG',
+    'Israel': 'IL',
+    'Saudi Arabia': 'SA',
+    'United Arab Emirates': 'AE',
+    'Iran': 'IR',
+    'Iraq': 'IQ',
+    'Afghanistan': 'AF',
+    'Kazakhstan': 'KZ',
+    'Taiwan': 'TW',
+    'Hong Kong': 'HK',
+
+    // Oceania
+    'Australia': 'AU',
+    'New Zealand': 'NZ',
+    'Fiji': 'FJ',
+
+    // Africa
+    'South Africa': 'ZA',
+    'Egypt': 'EG',
+    'Nigeria': 'NG',
+    'Kenya': 'KE',
+    'Morocco': 'MA',
+    'Algeria': 'DZ',
+    'Tunisia': 'TN',
+    'Ethiopia': 'ET',
+    'Ghana': 'GH',
+  };
+
+  const isoCode = countryToISO[country];
+
+  if (!isoCode) {
+    return <span className="text-lg">🌍</span>;
+  }
+
+  return (
+    <img
+      src={`https://flagsapi.com/${isoCode}/flat/32.png`}
+      alt={`${country} flag`}
+      className="w-6 h-6 object-cover rounded shadow-sm"
+      loading="lazy"
+    />
+  );
+}
+
 export default function AnalyticsPage() {
   const params = useParams();
   const shortCode = params.shortCode as string;
@@ -94,18 +232,10 @@ export default function AnalyticsPage() {
         return acc;
       }, {});
 
-      const countryCodeToFlag: Record<string, string> = {
-        'United States': '🇺🇸', 'Germany': '🇩🇪', 'Netherlands': '🇳🇱', 'United Kingdom': '🇬🇧',
-        'Italy': '🇮🇹', 'Vietnam': '🇻🇳', 'France': '🇫🇷', 'Spain': '🇪🇸', 'Canada': '🇨🇦',
-        'Australia': '🇦🇺', 'Japan': '🇯🇵', 'China': '🇨🇳', 'India': '🇮🇳', 'Brazil': '🇧🇷',
-        'Mexico': '🇲🇽', 'Russia': '🇷🇺', 'South Korea': '🇰🇷', 'Argentina': '🇦🇷',
-        'Chile': '🇨🇱', 'Colombia': '🇨🇴', 'Local': '🏠', 'Unknown': '🌍',
-      };
-
       const countriesList = Object.entries(countryCounts)
         .map(([name, clicks]) => ({
           name,
-          flag: countryCodeToFlag[name] || '🏳️',
+          flag: getCountryFlag(name),
           clicks,
         }))
         .sort((a, b) => b.clicks - a.clicks)
@@ -260,7 +390,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 p-4 md:p-8">
-      <div className="max-w-[95%] mx-auto space-y-8">
+      <div className="max-w-[100%] mx-auto space-y-8">
         {/* Header/Info Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="md:col-span-2 p-4 md:p-8 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-sm rounded-3xl">
@@ -482,7 +612,7 @@ export default function AnalyticsPage() {
                 {countries.length > 0 ? countries.map((c) => (
                   <div key={c.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="text-xl w-8 h-8 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-xl shadow-inner italic">
+                      <div className="w-8 h-8 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-xl shadow-inner">
                         {c.flag}
                       </div>
                       <span className="text-sm font-bold text-gray-700 dark:text-gray-300">{c.name}</span>
@@ -542,8 +672,9 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-1.5 min-w-[120px]">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Items per page - keep as dropdown */}
+              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-1.5">
                 <span className="text-xs font-bold text-gray-400">Ver:</span>
                 <select
                   value={itemsPerPage}
@@ -554,20 +685,113 @@ export default function AnalyticsPage() {
                   className="bg-transparent border-0 text-xs font-black outline-none w-full text-gray-900 dark:text-white cursor-pointer"
                 >
                   {[10, 20, 50].map(n => (
-                    <option key={n} value={n}>{n}</option>
+                    <option key={n} value={n} className="text-gray-900 bg-white">{n}</option>
                   ))}
                 </select>
               </div>
             </div>
           </div>
 
+          {/* Multi-select Filters */}
+          <div className="hidden md:block mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* OS Filter */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Monitor size={14} className="text-gray-400" />
+                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sistema Operativo</span>
+                  {osFilter.length > 0 && (
+                    <button
+                      onClick={() => {
+                        setOsFilter([]);
+                        setCurrentPage(1);
+                      }}
+                      className="text-[10px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                    >
+                      Limpiar
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {availableOS.map(os => {
+                    const isSelected = osFilter.includes(os);
+                    return (
+                      <button
+                        key={os}
+                        onClick={() => {
+                          if (isSelected) {
+                            setOsFilter(osFilter.filter(o => o !== os));
+                          } else {
+                            setOsFilter([...osFilter, os]);
+                          }
+                          setCurrentPage(1);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isSelected
+                            ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+                          }`}
+                      >
+                        {os}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Browser Filter */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Globe size={14} className="text-gray-400" />
+                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Navegador</span>
+                  {browserFilter.length > 0 && (
+                    <button
+                      onClick={() => {
+                        setBrowserFilter([]);
+                        setCurrentPage(1);
+                      }}
+                      className="text-[10px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                    >
+                      Limpiar
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {availableBrowsers.map(browser => {
+                    const isSelected = browserFilter.includes(browser);
+                    return (
+                      <button
+                        key={browser}
+                        onClick={() => {
+                          if (isSelected) {
+                            setBrowserFilter(browserFilter.filter(b => b !== browser));
+                          } else {
+                            setBrowserFilter([...browserFilter, browser]);
+                          }
+                          setCurrentPage(1);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isSelected
+                            ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+                          }`}
+                      >
+                        {browser}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="overflow-x-auto -mx-4 md:-mx-8">
-            <table className="w-full text-left border-collapse min-w-[900px]">
+            <table className="w-full text-left border-collapse min-w-[1200px]">
               <thead className="bg-gray-50/50 dark:bg-gray-950/50 border-y border-gray-100 dark:border-gray-800">
                 <tr>
                   <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha & Hora</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">IP Address</th>
                   <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Ubicación</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Dispositivo</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Device / OS</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Browser / Lang</th>
                   <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Referrer</th>
                   <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Red (ISP)</th>
                 </tr>
@@ -586,10 +810,15 @@ export default function AnalyticsPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-xs font-mono text-gray-600 dark:text-gray-400">
+                            {click.ip_address || 'N/A'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
-                            <span className="text-lg bg-gray-50 dark:bg-gray-800 p-1 rounded-lg grayscale group-hover:grayscale-0 transition-all">
-                              {click.country === 'Local' ? '🏠' : click.country === 'Vietnam' ? '🇻🇳' : '🌍'}
-                            </span>
+                            <div className="w-8 h-8 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-lg shadow-inner grayscale group-hover:grayscale-0 transition-all">
+                              {getCountryFlag(click.country)}
+                            </div>
                             <div className="flex flex-col">
                               <span className="text-xs font-black text-gray-900 dark:text-white uppercase">{click.city || 'Desconocida'}</span>
                               <span className="text-[10px] font-bold text-gray-400">{click.country || 'Desconocido'}</span>
@@ -604,9 +833,15 @@ export default function AnalyticsPage() {
                                   <Monitor size={14} />}
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-xs font-black text-gray-900 dark:text-white uppercase">{click.os || 'OS?'}</span>
-                              <span className="text-[9px] font-black bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-md w-fit mt-0.5 uppercase tracking-tighter">{click.browser || 'Browser?'}</span>
+                              <span className="text-xs font-black text-gray-900 dark:text-white uppercase">{click.device_type || 'Unknown'}</span>
+                              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400">{click.os || 'Unknown'}</span>
                             </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-col">
+                            <span className="text-xs font-black text-gray-900 dark:text-white uppercase">{click.browser || 'Unknown'}</span>
+                            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400">{click.language || 'Unknown'}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 max-w-[200px] overflow-hidden">
@@ -632,7 +867,7 @@ export default function AnalyticsPage() {
                       </tr>
                     ))) : (
                   <tr>
-                    <td colSpan={5} className="px-6 py-16 text-center text-gray-400 font-black uppercase tracking-widest italic opacity-50">Sin actividad reciente</td>
+                    <td colSpan={7} className="px-6 py-16 text-center text-gray-400 font-black uppercase tracking-widest italic opacity-50">Sin actividad reciente</td>
                   </tr>
                 )}
               </tbody>

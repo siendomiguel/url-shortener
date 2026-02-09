@@ -25,7 +25,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
             </Suspense>
           </div>
         </nav>
-        <div className="flex-1 w-full max-w-7xl mx-auto p-5">{children}</div>
+        <div className="flex-1 w-full max-w-[95%] mx-auto p-5">{children}</div>
 
         <footer className="w-full flex flex-col md:flex-row items-center justify-between max-w-7xl border-t mx-auto text-center text-xs gap-8 py-10 px-5 mt-20">
           <div className="flex flex-col items-center md:items-start gap-2">
