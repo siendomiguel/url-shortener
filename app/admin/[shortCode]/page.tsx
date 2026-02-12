@@ -162,7 +162,6 @@ export default function AnalyticsPage() {
   const [user, setUser] = useState<any>(null);
   const [url, setUrl] = useState<any>(null);
   const [clicks, setClicks] = useState<any[]>([]);
-  const [countries, setCountries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -170,7 +169,6 @@ export default function AnalyticsPage() {
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [topReferrers, setTopReferrers] = useState<{ name: string; count: number }[]>([]);
   const [osFilter, setOsFilter] = useState<string[]>([]);
   const [browserFilter, setBrowserFilter] = useState<string[]>([]);
 
@@ -225,38 +223,6 @@ export default function AnalyticsPage() {
       const clickData = clicks || [];
       setClicks(clickData);
 
-      // Process countries from stored data
-      const countryCounts = clickData.reduce((acc: Record<string, number>, click) => {
-        const country = click.country || 'Unknown';
-        acc[country] = (acc[country] || 0) + 1;
-        return acc;
-      }, {});
-
-      const countriesList = Object.entries(countryCounts)
-        .map(([name, clicks]) => ({
-          name,
-          flag: getCountryFlag(name),
-          clicks,
-        }))
-        .sort((a, b) => b.clicks - a.clicks)
-        .slice(0, 6);
-
-      setCountries(countriesList);
-
-      // Process referrers
-      const refCounts = clickData.reduce((acc: Record<string, number>, click) => {
-        const ref = click.referrer || 'Direct';
-        acc[ref] = (acc[ref] || 0) + 1;
-        return acc;
-      }, {});
-
-      const referrersList = Object.entries(refCounts)
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
-
-      setTopReferrers(referrersList);
-
       setLoading(false);
     };
 
@@ -292,61 +258,108 @@ export default function AnalyticsPage() {
     return <div className="min-h-screen flex items-center justify-center">Access denied or URL not found</div>;
   }
 
-  // Filter and Group Data based on timeRange
+  // Filter and Group Data
   const now = new Date();
+
+  const filteredClicks = clicks.filter(click => {
+    // OS and Browser filters
+    const osMatch = osFilter.length === 0 || osFilter.includes(click.os || 'Unknown');
+    const browserMatch = browserFilter.length === 0 || browserFilter.includes(click.browser || 'Unknown');
+
+    // Date filter
+    let dateMatch = true;
+    const clickDate = new Date(click.clicked_at);
+    if (timeRange === '24h') {
+      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      dateMatch = clickDate >= yesterday;
+    } else if (timeRange === '7d') {
+      const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      dateMatch = clickDate >= lastWeek;
+    } else if (timeRange === '30d') {
+      const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      dateMatch = clickDate >= lastMonth;
+    }
+
+    return osMatch && browserMatch && dateMatch;
+  });
+
+  // Calculate unique OS and Browser values for filters (using ALL clicks)
+  const availableOS = Array.from(new Set(clicks.map(c => c.os || 'Unknown'))).sort();
+  const availableBrowsers = Array.from(new Set(clicks.map(c => c.browser || 'Unknown'))).sort();
+
+  // Derived statistics based on fully filtered clicks
+  const countriesList = Object.entries(
+    filteredClicks.reduce((acc: Record<string, number>, click) => {
+      const country = click.country || 'Unknown';
+      acc[country] = (acc[country] || 0) + 1;
+      return acc;
+    }, {})
+  )
+    .map(([name, clicks]) => ({
+      name,
+      flag: getCountryFlag(name),
+      clicks,
+    }))
+    .sort((a, b) => b.clicks - a.clicks)
+    .slice(0, 6);
+
+  const referrersList = Object.entries(
+    filteredClicks.reduce((acc: Record<string, number>, click) => {
+      const ref = click.referrer || 'Direct';
+      acc[ref] = (acc[ref] || 0) + 1;
+      return acc;
+    }, {})
+  )
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+
   const getFilteredData = () => {
-    let filtered = clicks;
     const labels: string[] = [];
     const groupedData: Record<string, number> = {};
 
     if (timeRange === '24h') {
-      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      filtered = clicks.filter(c => new Date(c.clicked_at) >= yesterday);
       for (let i = 23; i >= 0; i--) {
         const d = new Date(now.getTime() - i * 60 * 60 * 1000);
         const key = `${d.getHours()}:00`;
         labels.push(key);
         groupedData[key] = 0;
       }
-      filtered.forEach(c => {
+      filteredClicks.forEach(c => {
         const d = new Date(c.clicked_at);
         const key = `${d.getHours()}:00`;
         if (groupedData[key] !== undefined) groupedData[key]++;
       });
     } else if (timeRange === '7d') {
-      const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      filtered = clicks.filter(c => new Date(c.clicked_at) >= lastWeek);
       for (let i = 6; i >= 0; i--) {
         const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
         const key = d.toLocaleDateString('en-US', { weekday: 'short' });
         labels.push(key);
         groupedData[key] = 0;
       }
-      filtered.forEach(c => {
+      filteredClicks.forEach(c => {
         const d = new Date(c.clicked_at);
         const key = d.toLocaleDateString('en-US', { weekday: 'short' });
         if (groupedData[key] !== undefined) groupedData[key]++;
       });
     } else if (timeRange === '30d') {
-      const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      filtered = clicks.filter(c => new Date(c.clicked_at) >= lastMonth);
       for (let i = 29; i >= 0; i--) {
         const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
         const key = `${d.getDate()} / ${d.getMonth() + 1}`;
         labels.push(key);
         groupedData[key] = 0;
       }
-      filtered.forEach(c => {
+      filteredClicks.forEach(c => {
         const d = new Date(c.clicked_at);
         const key = `${d.getDate()} / ${d.getMonth() + 1}`;
         if (groupedData[key] !== undefined) groupedData[key]++;
       });
     } else {
       // All time - group by day
-      if (clicks.length === 0) return [];
+      if (filteredClicks.length === 0) return [];
 
-      const firstClickDate = new Date(clicks[0].clicked_at);
-      // Reset hours to start of day for accurate day counting
+      const sortedClicks = [...filteredClicks].sort((a, b) => new Date(a.clicked_at).getTime() - new Date(b.clicked_at).getTime());
+      const firstClickDate = new Date(sortedClicks[0].clicked_at);
       const startDate = new Date(firstClickDate.getFullYear(), firstClickDate.getMonth(), firstClickDate.getDate());
       const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -360,7 +373,7 @@ export default function AnalyticsPage() {
         groupedData[key] = 0;
       }
 
-      clicks.forEach(c => {
+      filteredClicks.forEach(c => {
         const d = new Date(c.clicked_at);
         const key = `${d.getDate()} / ${d.getMonth() + 1}`;
         if (groupedData[key] !== undefined) groupedData[key]++;
@@ -373,16 +386,6 @@ export default function AnalyticsPage() {
   };
 
   const chartData = getFilteredData();
-
-  // Calculate unique OS and Browser values for filters
-  const availableOS = Array.from(new Set(clicks.map(c => c.os || 'Unknown'))).sort();
-  const availableBrowsers = Array.from(new Set(clicks.map(c => c.browser || 'Unknown'))).sort();
-
-  const filteredClicks = clicks.filter(click => {
-    const osMatch = osFilter.length === 0 || osFilter.includes(click.os || 'Unknown');
-    const browserMatch = browserFilter.length === 0 || browserFilter.includes(click.browser || 'Unknown');
-    return osMatch && browserMatch;
-  });
 
   const rangeTotalClicks = chartData.reduce((a, b) => a + b.value, 0);
 
@@ -468,6 +471,97 @@ export default function AnalyticsPage() {
             <p className="text-[10px] opacity-70 mt-2 font-bold uppercase tracking-tight">Periodo: {timeRange.toUpperCase()}</p>
           </Card>
         </div>
+
+        {/* Global Filters Section */}
+        <Card className="p-4 md:p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-sm rounded-3xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* OS Filter */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Monitor size={14} className="text-gray-400" />
+                <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sistema Operativo</span>
+                {osFilter.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setOsFilter([]);
+                      setCurrentPage(1);
+                    }}
+                    className="text-[10px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                  >
+                    Limpiar
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {availableOS.map(os => {
+                  const isSelected = osFilter.includes(os);
+                  return (
+                    <button
+                      key={os}
+                      onClick={() => {
+                        if (isSelected) {
+                          setOsFilter(osFilter.filter(o => o !== os));
+                        } else {
+                          setOsFilter([...osFilter, os]);
+                        }
+                        setCurrentPage(1);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isSelected
+                        ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+                        }`}
+                    >
+                      {os}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Browser Filter */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Globe size={14} className="text-gray-400" />
+                <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Navegador</span>
+                {browserFilter.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setBrowserFilter([]);
+                      setCurrentPage(1);
+                    }}
+                    className="text-[10px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                  >
+                    Limpiar
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {availableBrowsers.map(browser => {
+                  const isSelected = browserFilter.includes(browser);
+                  return (
+                    <button
+                      key={browser}
+                      onClick={() => {
+                        if (isSelected) {
+                          setBrowserFilter(browserFilter.filter(b => b !== browser));
+                        } else {
+                          setBrowserFilter([...browserFilter, browser]);
+                        }
+                        setCurrentPage(1);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isSelected
+                        ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+                        }`}
+                    >
+                      {browser}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </Card>
 
         {/* Analytics Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -609,7 +703,7 @@ export default function AnalyticsPage() {
                 <h3 className="font-black text-gray-900 dark:text-white uppercase tracking-tighter">Top Países</h3>
               </div>
               <div className="space-y-5">
-                {countries.length > 0 ? countries.map((c) => (
+                {countriesList.length > 0 ? countriesList.map((c) => (
                   <div key={c.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-xl shadow-inner">
@@ -621,7 +715,7 @@ export default function AnalyticsPage() {
                       <div className="w-20 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)]"
-                          style={{ width: `${(c.clicks / clicks.length) * 100}%` }}
+                          style={{ width: `${filteredClicks.length > 0 ? (c.clicks / filteredClicks.length) * 100 : 0}%` }}
                         />
                       </div>
                       <span className="text-xs font-black text-gray-900 dark:text-white w-6 text-right">{c.clicks}</span>
@@ -639,7 +733,7 @@ export default function AnalyticsPage() {
                 <h3 className="font-black text-gray-900 dark:text-white uppercase tracking-tighter">Referrers</h3>
               </div>
               <div className="space-y-4">
-                {topReferrers.length > 0 ? topReferrers.map((ref) => (
+                {referrersList.length > 0 ? referrersList.map((ref) => (
                   <div key={ref.name} className="group flex items-center justify-between gap-4 p-2 rounded-xl border border-transparent hover:border-blue-100 dark:hover:border-blue-900/30 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-all">
                     <span
                       className="text-xs font-bold text-gray-600 dark:text-gray-400 truncate flex-1"
@@ -692,96 +786,6 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          {/* Multi-select Filters */}
-          <div className="hidden md:block mb-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* OS Filter */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Monitor size={14} className="text-gray-400" />
-                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sistema Operativo</span>
-                  {osFilter.length > 0 && (
-                    <button
-                      onClick={() => {
-                        setOsFilter([]);
-                        setCurrentPage(1);
-                      }}
-                      className="text-[10px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline"
-                    >
-                      Limpiar
-                    </button>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {availableOS.map(os => {
-                    const isSelected = osFilter.includes(os);
-                    return (
-                      <button
-                        key={os}
-                        onClick={() => {
-                          if (isSelected) {
-                            setOsFilter(osFilter.filter(o => o !== os));
-                          } else {
-                            setOsFilter([...osFilter, os]);
-                          }
-                          setCurrentPage(1);
-                        }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isSelected
-                            ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
-                          }`}
-                      >
-                        {os}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Browser Filter */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Globe size={14} className="text-gray-400" />
-                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Navegador</span>
-                  {browserFilter.length > 0 && (
-                    <button
-                      onClick={() => {
-                        setBrowserFilter([]);
-                        setCurrentPage(1);
-                      }}
-                      className="text-[10px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline"
-                    >
-                      Limpiar
-                    </button>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {availableBrowsers.map(browser => {
-                    const isSelected = browserFilter.includes(browser);
-                    return (
-                      <button
-                        key={browser}
-                        onClick={() => {
-                          if (isSelected) {
-                            setBrowserFilter(browserFilter.filter(b => b !== browser));
-                          } else {
-                            setBrowserFilter([...browserFilter, browser]);
-                          }
-                          setCurrentPage(1);
-                        }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isSelected
-                            ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
-                          }`}
-                      >
-                        {browser}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
 
           <div className="overflow-x-auto -mx-4 md:-mx-8">
             <table className="w-full text-left border-collapse min-w-[1200px]">
